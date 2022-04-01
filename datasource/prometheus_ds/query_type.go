@@ -18,7 +18,7 @@ var default_id_label = "hostname"
 type LabelValueQuery struct {
 	IDs          []string
 	IDLabel      string
-	QueryMetric  string
+	QueryMetric  []string
 	Labels       map[proto.ServerPropertyFields]string
 	Restrictions []utils.PrometheusMatcher
 }
@@ -28,7 +28,7 @@ func (q *LabelValueQuery) AutoComplete() {
 		q.IDLabel = default_id_label
 	}
 	if len(q.QueryMetric) == 0 {
-		q.QueryMetric = default_static_label_source_metric
+		q.QueryMetric = []string{default_static_label_source_metric}
 	}
 }
 
