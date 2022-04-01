@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/chengchung/ServerStatus/common/concurrency"
-	"github.com/chengchung/ServerStatus/common/utils"
 	"github.com/chengchung/ServerStatus/proto"
 	"github.com/prometheus/common/model"
 	"github.com/sirupsen/logrus"
@@ -13,11 +12,33 @@ import (
 func (c *PrometheusV1APIClient) GetPotentialIdentifications(para LabelValueQuery) ([]string, error) {
 	para.AutoComplete()
 
-	query := utils.QueryString{
-		MetricName: para.QueryMetric,
-		Matchers:   para.Restrictions,
+	// query := MetricValueQuery{
+	// 	QueryMetrics:           []string{default_static_label_source_metric},
+	// 	Restrictions:           para.Restrictions,
+	// 	DisableDefaultMatchers: true,
+	// }
+	// logrus.Info(query.String())
+	// all_hosts, err := c.GetStaticLabelValues(query.String(), para.IDLabel)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	query := MetricValueQuery{
+		Query:                  "%s==1",
+		QueryMetrics:           []string{default_static_label_source_metric},
+		Restrictions:           para.Restrictions,
+		DisableDefaultMatchers: true,
 	}
-	return c.GetStaticLabelValues(query.String(), para.IDLabel)
+
+	if result, err := c.GetMetricValues(query); err != nil {
+		return nil, err
+	} else {
+		up_hosts := make([]string, 0)
+		for k := range result {
+			up_hosts = append(up_hosts, k)
+		}
+		return up_hosts, nil
+	}
 }
 
 func (c *PrometheusV1APIClient) GetHostProperties(para LabelValueQuery) map[string]proto.ServerProperty {
@@ -29,17 +50,14 @@ func (c *PrometheusV1APIClient) GetHostProperties(para LabelValueQuery) map[stri
 
 		go func(id string) {
 			var property proto.ServerProperty
-			id_matcher := utils.NewPrometheusMatcher(para.IDLabel, "=", id)
 			for key, qry_label := range para.Labels {
-
-				restrictions_with_id := make([]utils.PrometheusMatcher, 0)
-				restrictions_with_id = append(restrictions_with_id, para.Restrictions...)
-				restrictions_with_id = append(restrictions_with_id, id_matcher)
-
-				qr := utils.QueryString{
-					MetricName: para.QueryMetric,
-					Matchers:   restrictions_with_id,
+				qr := MetricValueQuery{
+					IDs:          []string{id},
+					IDLabel:      para.IDLabel,
+					QueryMetrics: []string{default_static_label_source_metric},
+					Restrictions: para.Restrictions,
 				}
+				qr.AutoComplete()
 
 				label_values, err := c.GetStaticLabelValues(qr.String(), qry_label)
 				if err != nil {
