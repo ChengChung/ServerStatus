@@ -20,9 +20,9 @@ var default_up_time_source_metric = `node_boot_time_seconds`
 
 var default_load1_source_metric = "node_load1"
 
-var default_cpu_cnt_query_str = `sum(count(%s) by (cpu, ##ID_LABEL##)) by (##ID_LABEL##)`
-var default_cpu_cnt_source_metric = `node_cpu_seconds_total`
-var default_cpu_cnt_matcher utils.PrometheusMatcher = utils.NewPrometheusMatcher("mode", "=", "system")
+var default_cpu_usage_query_str = `100 - (avg(irate(%s[1m])) by (##ID_LABEL##) * 100)`
+var default_cpu_usage_source_metric = `node_cpu_seconds_total`
+var default_cpu_usage_matcher utils.PrometheusMatcher = utils.NewPrometheusMatcher("mode", "=", "idle")
 
 var default_memory_total_source_metric = `node_memory_MemTotal_bytes`
 var default_memory_avail_source_metric = `node_memory_MemAvailable_bytes`
@@ -71,7 +71,7 @@ var (
 		"property":     (*QueryClient).get_host_properties,
 		"uptime":       (*QueryClient).get_host_uptime,
 		"load":         (*QueryClient).get_host_load1,
-		"cpu":          (*QueryClient).get_host_cpu_cnt,
+		"cpu":          (*QueryClient).get_host_cpu_usage,
 		"memory_total": (*QueryClient).get_host_memory_total,
 		"memory_used":  (*QueryClient).get_host_memory_used,
 		"swap_total":   (*QueryClient).get_host_swap_total,
@@ -463,17 +463,17 @@ func (c *QueryClient) get_host_load1(rawctx interface{}) (interface{}, error) {
 	return load1, err
 }
 
-func (c *QueryClient) get_host_cpu_cnt(rawctx interface{}) (interface{}, error) {
+func (c *QueryClient) get_host_cpu_usage(rawctx interface{}) (interface{}, error) {
 	ctx := rawctx.(*QueryProcedureContext)
 
 	cpu_restrictions := make([]utils.PrometheusMatcher, 0)
 	cpu_restrictions = append(cpu_restrictions, c.current_prop.global_restrictions...)
-	cpu_restrictions = append(cpu_restrictions, default_cpu_cnt_matcher)
+	cpu_restrictions = append(cpu_restrictions, default_cpu_usage_matcher)
 	cpus, err := c.client.GetMetricValues(prometheus_ds.MetricValueQuery{
 		IDLabel:      c.current_prop.id_label,
 		IDs:          ctx.up_hosts,
-		Query:        default_cpu_cnt_query_str,
-		QueryMetrics: []string{default_cpu_cnt_source_metric},
+		Query:        default_cpu_usage_query_str,
+		QueryMetrics: []string{default_cpu_usage_source_metric},
 		Restrictions: cpu_restrictions,
 	})
 
