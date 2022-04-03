@@ -36,8 +36,8 @@ var default_swap_used_query_str = `(%s - %s) / 1024`
 
 var default_hdd_total_source_metric = `node_filesystem_size_bytes`
 var default_hdd_free_source_metric = `node_filesystem_free_bytes`
-var default_hdd_total_query_str = `%s / 1024 / 1024`
-var default_hdd_used_query_str = `(%s - %s) / 1024 / 1024`
+var default_hdd_total_query_str = `sum(%s / 1024 / 1024) by (##ID_LABEL##)`
+var default_hdd_used_query_str = `sum((%s - %s) / 1024 / 1024) by (##ID_LABEL##)`
 var default_hdd_matcher utils.PrometheusMatcher = utils.NewPrometheusMatcher("fstype", "=~", "ext4|xfs|ubifs")
 
 var default_network_rx_source_metric = `node_network_receive_bytes_total`
