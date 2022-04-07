@@ -1,0 +1,50 @@
+{
+    "version": 1,
+    "listen": "127.0.0.1:30000",
+    "refresh_interval": 120,
+    "scrape_interval": 5,
+    "log_path": "/path/to/logdir",
+    "nodes": {
+        "default_data_source": "prometheus_name",
+        "id_label": "hostname",
+        "mode": "AUTO",
+        "list": [
+            {
+                "hostname": "host-a",
+                "overwrites": {
+                    "hostname": "DisplayNameForHostA",
+                    "net_devices": [
+                        "eth4",
+                        "pppoe0"
+                    ]
+                }
+            },
+            {
+                "hostname": "host-b",
+                "overwrites": {
+                    "hostname": "DisplayNameForHostB",
+                    "net_devices": [
+                        "eth3",
+                        "eth4",
+                        "pppoe0",
+                        "pppoe1"
+                    ]
+                }
+            }
+        ],
+        "global_matcher": [
+            {
+                "label": "job",
+                "op": "=",
+                "value": "node"
+            }
+        ]
+    },
+    "data_sources": [
+        {
+            "type": "prometheus",
+            "name": "prometheus_name",
+            "url": "https://127.0.0.1:9090"
+        }
+    ]
+}

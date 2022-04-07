@@ -1,0 +1,27 @@
+global:
+  scrape_interval:     15s # By default, scrape targets every 15 seconds.
+  evaluation_interval: 15s # By default, scrape targets every 15 seconds.
+
+scrape_configs:
+
+  - job_name: node
+    scrape_interval: 15s
+    scrape_timeout: 15s
+
+    static_configs:
+      - targets: ['1.1.1.1:9100']
+        labels:
+          hostname: "host-a"
+          virt_type: "kvm"
+          region: "FR"
+          location: "Paris"
+      - targets: ['2.2.2.2:9100']
+        labels:
+          hostname: "host-b"
+          virt_type: "kvm"
+          region: "JP"
+          location: "Osaka"
+    metric_relabel_configs:
+          - action: labeldrop
+            regex: (region|location)
+
