@@ -328,6 +328,10 @@ func (c *QueryClient) update_hosts_metrics(rawctx interface{}) {
 		result := rawres.(concurrency.TaskResult)
 		propertyType := result.ID
 		rawvalue := result.Result
+		if rawvalue == nil {
+			logrus.Errorf("get nil result for property %s", propertyType)
+			continue
+		}
 		if propertyType == "property" {
 			m := rawvalue.(map[string]proto.ServerProperty)
 			for host, value := range m {
@@ -422,7 +426,7 @@ func (c *QueryClient) write_info(rawctx interface{}) {
 	}
 }
 
-//	以下为具体指标的查询语句
+// 以下为具体指标的查询语句
 func (c *QueryClient) get_host_properties(rawctx interface{}) (interface{}, error) {
 	ctx := rawctx.(*QueryProcedureContext)
 
@@ -573,45 +577,91 @@ func (c *QueryClient) get_host_hdd_used(rawctx interface{}) (interface{}, error)
 func (c *QueryClient) get_host_network_rx_total(rawctx interface{}) (interface{}, error) {
 	ctx := rawctx.(*QueryProcedureContext)
 
-	network_rx_total_multi := prometheus_ds.MultiMetricValueQueryWithTimeRange{
-		IDLabel:             c.current_prop.id_label,
-		IDs:                 ctx.up_hosts,
-		Query:               default_singe_network_sum_query_str,
-		QueryMetrics:        []string{default_network_rx_source_metric},
-		TimeRangeType:       proto.THIS_MONTH_SO_FAR,
-		GlobalRestrictions:  c.current_prop.global_restrictions,
-		DefaultRestrictions: network_default_matchers,
-		CustomResctrictions: ctx.network_matchers,
-	}
-	network_rx_total, err := c.client.GetMetricValues(prometheus_ds.MetricValueQuery{
-		Query:                  default_network_sum_query_str,
-		QueryMetrics:           []string{network_rx_total_multi.String()},
-		DisableDefaultMatchers: true,
-	})
+	wg := sync.WaitGroup{}
+	wg.Add(len(ctx.up_hosts))
 
-	return network_rx_total, err
+	result := map[string]float64{}
+	lock := sync.Mutex{}
+
+	var someerr error
+
+	for _, host := range ctx.up_hosts {
+		go func(host string) {
+			network_rx_total_multi := prometheus_ds.MultiMetricValueQueryWithTimeRange{
+				IDLabel:             c.current_prop.id_label,
+				IDs:                 []string{host},
+				Query:               default_singe_network_sum_query_str,
+				QueryMetrics:        []string{default_network_rx_source_metric},
+				TimeRangeType:       proto.THIS_MONTH_SO_FAR,
+				GlobalRestrictions:  c.current_prop.global_restrictions,
+				DefaultRestrictions: network_default_matchers,
+				CustomResctrictions: ctx.network_matchers,
+			}
+			network_rx_total, err := c.client.GetMetricValues(prometheus_ds.MetricValueQuery{
+				Query:                  default_network_sum_query_str,
+				QueryMetrics:           []string{network_rx_total_multi.String()},
+				DisableDefaultMatchers: true,
+			})
+			lock.Lock()
+			defer lock.Unlock()
+			if err != nil {
+				someerr = err
+				logrus.Errorf("get network rx total for host %s failed: %v", host, err)
+			} else {
+				result[host] = network_rx_total[host]
+			}
+			wg.Done()
+		}(host)
+	}
+
+	wg.Wait()
+
+	return result, someerr
 }
 
 func (c *QueryClient) get_host_network_tx_total(rawctx interface{}) (interface{}, error) {
 	ctx := rawctx.(*QueryProcedureContext)
 
-	network_tx_total_multi := prometheus_ds.MultiMetricValueQueryWithTimeRange{
-		IDLabel:             c.current_prop.id_label,
-		IDs:                 ctx.up_hosts,
-		Query:               default_singe_network_sum_query_str,
-		QueryMetrics:        []string{default_network_tx_source_metric},
-		TimeRangeType:       proto.THIS_MONTH_SO_FAR,
-		GlobalRestrictions:  c.current_prop.global_restrictions,
-		DefaultRestrictions: network_default_matchers,
-		CustomResctrictions: ctx.network_matchers,
-	}
-	network_tx_total, err := c.client.GetMetricValues(prometheus_ds.MetricValueQuery{
-		Query:                  default_network_sum_query_str,
-		QueryMetrics:           []string{network_tx_total_multi.String()},
-		DisableDefaultMatchers: true,
-	})
+	wg := sync.WaitGroup{}
+	wg.Add(len(ctx.up_hosts))
 
-	return network_tx_total, err
+	result := map[string]float64{}
+	lock := sync.Mutex{}
+
+	var someerr error
+
+	for _, host := range ctx.up_hosts {
+		go func(host string) {
+			network_tx_total_multi := prometheus_ds.MultiMetricValueQueryWithTimeRange{
+				IDLabel:             c.current_prop.id_label,
+				IDs:                 []string{host},
+				Query:               default_singe_network_sum_query_str,
+				QueryMetrics:        []string{default_network_tx_source_metric},
+				TimeRangeType:       proto.THIS_MONTH_SO_FAR,
+				GlobalRestrictions:  c.current_prop.global_restrictions,
+				DefaultRestrictions: network_default_matchers,
+				CustomResctrictions: ctx.network_matchers,
+			}
+			network_tx_total, err := c.client.GetMetricValues(prometheus_ds.MetricValueQuery{
+				Query:                  default_network_sum_query_str,
+				QueryMetrics:           []string{network_tx_total_multi.String()},
+				DisableDefaultMatchers: true,
+			})
+			lock.Lock()
+			defer lock.Unlock()
+			if err != nil {
+				someerr = err
+				logrus.Errorf("get network tx total for host %s failed: %v", host, err)
+			} else {
+				result[host] = network_tx_total[host]
+			}
+			wg.Done()
+		}(host)
+	}
+
+	wg.Wait()
+
+	return result, someerr
 }
 
 func (c *QueryClient) get_host_network_rx_rate(rawctx interface{}) (interface{}, error) {

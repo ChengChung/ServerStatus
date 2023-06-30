@@ -65,7 +65,7 @@ func (c *PrometheusV1APIClient) GetHostProperties(para LabelValueQuery) map[stri
 					continue
 				}
 				if len(label_values) == 0 {
-					logrus.Error("fail to get label value %s for id %s", qry_label, id)
+					logrus.Errorf("fail to get label value %s for id %s", qry_label, id)
 					continue
 				}
 
