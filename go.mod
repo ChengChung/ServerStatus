@@ -1,6 +1,6 @@
 module github.com/chengchung/ServerStatus
 
-go 1.16
+go 1.20
 
 require (
 	github.com/VictoriaMetrics/metricsql v0.65.0
