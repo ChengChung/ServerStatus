@@ -8,17 +8,14 @@ const (
 	Region   ServerPropertyFields = "region"
 )
 
-var DefaultPropertyLabelMapping map[ServerPropertyFields]string
+var DefaultPropertyLabelMapping map[ServerPropertyFields]string = map[ServerPropertyFields]string{
+	Type:     string(Type),
+	Location: string(Location),
+	Region:   string(Region),
+}
 
 type TimeRangeType string
 
 const (
 	THIS_MONTH_SO_FAR TimeRangeType = "THIS_MONTH_SO_FAR"
 )
-
-func init() {
-	DefaultPropertyLabelMapping = make(map[ServerPropertyFields]string)
-	DefaultPropertyLabelMapping[Type] = string(Type)
-	DefaultPropertyLabelMapping[Location] = string(Location)
-	DefaultPropertyLabelMapping[Region] = string(Region)
-}

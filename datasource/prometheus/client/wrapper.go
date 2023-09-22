@@ -1,4 +1,4 @@
-package prometheus_ds
+package client
 
 import (
 	"context"
@@ -40,10 +40,10 @@ func NewPrometheusV1APIClient(url string) (*PrometheusV1APIClient, error) {
 	return &PrometheusV1APIClient{client: v1api}, nil
 }
 
-//	e.g. if you have a metric like
-//	up{hostname="my_vps_id", region="US", location="LA"} 1
-//	you can get region value or location value of certain hostname from here
-//	also you can get all the hostname here
+// e.g. if you have a metric like
+// up{hostname="my_vps_id", region="US", location="LA"} 1
+// you can get region value or location value of certain hostname from here
+// also you can get all the hostname here
 func (c *PrometheusV1APIClient) GetStaticLabelValues(query string, target_label string) ([]string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

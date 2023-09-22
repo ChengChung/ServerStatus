@@ -9,7 +9,7 @@ import (
 
 	"github.com/chengchung/ServerStatus/common/logger"
 	"github.com/chengchung/ServerStatus/common/timer"
-	"github.com/chengchung/ServerStatus/data/prometheus_data"
+	"github.com/chengchung/ServerStatus/data/promql"
 	"github.com/chengchung/ServerStatus/datasource"
 	"github.com/chengchung/ServerStatus/proto"
 	"github.com/iris-contrib/middleware/cors"
@@ -20,7 +20,7 @@ import (
 
 var (
 	iris_app  *iris.Application
-	apiclient *prometheus_data.QueryClient
+	apiclient *promql.QueryClient
 
 	config_refresh_interval time.Duration
 	metric_scrape_interval  time.Duration
@@ -159,7 +159,7 @@ func init_main() bool {
 		return false
 	}
 
-	apiclient = prometheus_data.NewAPIClient(cfg.Nodes)
+	apiclient = promql.NewAPIClient(cfg.Nodes)
 
 	return true
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/chengchung/ServerStatus/common/configuration"
-	"github.com/chengchung/ServerStatus/datasource/prometheus_ds"
+	"github.com/chengchung/ServerStatus/datasource/prometheus/client"
 	"github.com/chengchung/ServerStatus/proto"
 )
 
@@ -14,7 +14,7 @@ var init_functs map[string]t_init_funct
 
 func init() {
 	init_functs = make(map[string]t_init_funct)
-	init_functs["prometheus"] = prometheus_ds.InitAPIClients
+	init_functs["prometheus"] = client.InitAPIClients
 }
 
 func InitDS(dss []interface{}) error {
@@ -36,6 +36,6 @@ func InitDS(dss []interface{}) error {
 	return nil
 }
 
-func GetPrometheusV1APIClient(id string) *prometheus_ds.PrometheusV1APIClient {
-	return prometheus_ds.GetAPIInstance(id)
+func GetPrometheusV1APIClient(id string) *client.PrometheusV1APIClient {
+	return client.GetAPIInstance(id)
 }

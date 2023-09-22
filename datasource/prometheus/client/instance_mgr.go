@@ -1,4 +1,4 @@
-package prometheus_ds
+package client
 
 import (
 	"sync"
