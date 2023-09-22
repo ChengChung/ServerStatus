@@ -12,15 +12,13 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var (
-	query_procedures []pipeline_funct = []pipeline_funct{
-		(*QueryClient).refresh_latest_info,
-		(*QueryClient).update_hosts,
-		(*QueryClient).prepare_host_ctx,
-		(*QueryClient).update_hosts_metrics,
-		(*QueryClient).write_info,
-	}
-)
+var query_procedures []pipeline_funct = []pipeline_funct{
+	(*QueryClient).refresh_latest_info,
+	(*QueryClient).update_hosts,
+	(*QueryClient).prepare_host_ctx,
+	(*QueryClient).update_hosts_metrics,
+	(*QueryClient).write_info,
+}
 
 func (c *QueryClient) refresh_latest_info(rawctx interface{}) {
 	ctx := rawctx.(*QueryProcedureContext)
@@ -93,11 +91,13 @@ func (c *QueryClient) prepare_host_ctx(rawctx interface{}) {
 			IsRegexp: true,
 		}}
 
-		t, err := time.Parse(time.RFC3339, value.BillingDate)
-		if err != nil {
-			logrus.Errorf("invalid billing date %s for host %s", value.BillingDate, host)
-		} else {
-			host_billing_settings[host] = t
+		if len(value.BillingDate) > 0 {
+			t, err := time.Parse(time.RFC3339, value.BillingDate)
+			if err != nil {
+				logrus.Errorf("invalid billing date %s for host %s", value.BillingDate, host)
+			} else {
+				host_billing_settings[host] = t
+			}
 		}
 	}
 

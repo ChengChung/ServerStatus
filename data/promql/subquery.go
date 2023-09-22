@@ -9,24 +9,22 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var (
-	query_tasks map[string]query_funct = map[string]query_funct{
-		"property":     (*QueryClient).get_host_properties,
-		"uptime":       (*QueryClient).get_host_uptime,
-		"load":         (*QueryClient).get_host_load1,
-		"cpu":          (*QueryClient).get_host_cpu_usage,
-		"memory_total": (*QueryClient).get_host_memory_total,
-		"memory_used":  (*QueryClient).get_host_memory_used,
-		"swap_total":   (*QueryClient).get_host_swap_total,
-		"swap_used":    (*QueryClient).get_host_swap_used,
-		"hdd_total":    (*QueryClient).get_host_hdd_total,
-		"hdd_used":     (*QueryClient).get_host_hdd_used,
-		"network_in":   (*QueryClient).get_host_network_rx_total,
-		"network_out":  (*QueryClient).get_host_network_tx_total,
-		"network_rx":   (*QueryClient).get_host_network_rx_rate,
-		"network_tx":   (*QueryClient).get_host_network_tx_rate,
-	}
-)
+var query_tasks map[string]query_funct = map[string]query_funct{
+	"property":     (*QueryClient).get_host_properties,
+	"uptime":       (*QueryClient).get_host_uptime,
+	"load":         (*QueryClient).get_host_load1,
+	"cpu":          (*QueryClient).get_host_cpu_usage,
+	"memory_total": (*QueryClient).get_host_memory_total,
+	"memory_used":  (*QueryClient).get_host_memory_used,
+	"swap_total":   (*QueryClient).get_host_swap_total,
+	"swap_used":    (*QueryClient).get_host_swap_used,
+	"hdd_total":    (*QueryClient).get_host_hdd_total,
+	"hdd_used":     (*QueryClient).get_host_hdd_used,
+	"network_in":   (*QueryClient).get_host_network_rx_total,
+	"network_out":  (*QueryClient).get_host_network_tx_total,
+	"network_rx":   (*QueryClient).get_host_network_rx_rate,
+	"network_tx":   (*QueryClient).get_host_network_tx_rate,
+}
 
 func (c *QueryClient) get_host_properties(rawctx interface{}) (interface{}, error) {
 	ctx := rawctx.(*QueryProcedureContext)
@@ -248,13 +246,17 @@ func (c *QueryClient) get_host_network_total(rawctx interface{}, base_query stri
 
 	now := time.Now()
 
+	rollup_query := increase_rollup_query_str
 	align_to := time.Duration(0)
-	if ctx.network_metric_overwrites.Enable && len(ctx.network_metric_overwrites.RangeAlign) > 0 {
-		duration, err := time.ParseDuration(ctx.network_metric_overwrites.RangeAlign)
-		if err != nil {
-			logrus.Errorf("invalid range align %s", ctx.network_metric_overwrites.RangeAlign)
-		} else {
-			align_to = duration
+	if ctx.network_metric_overwrites.Enable {
+		rollup_query = custom_increase_rollup_total_network_query_str
+		if len(ctx.network_metric_overwrites.RangeAlign) > 0 {
+			duration, err := time.ParseDuration(ctx.network_metric_overwrites.RangeAlign)
+			if err != nil {
+				logrus.Errorf("invalid range align %s", ctx.network_metric_overwrites.RangeAlign)
+			} else {
+				align_to = duration
+			}
 		}
 	}
 
@@ -281,7 +283,7 @@ func (c *QueryClient) get_host_network_total(rawctx interface{}, base_query stri
 		} else {
 			opt.Filters = append(opt.Filters, network_default_matchers...)
 		}
-		inner_expr, err := helper.AlterExpr(increase_rollup_query_str, opt)
+		inner_expr, err := helper.AlterExpr(rollup_query, opt)
 		if err != nil {
 			continue
 		}
