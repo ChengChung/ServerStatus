@@ -2,6 +2,7 @@ package promql
 
 import (
 	"sync"
+	"time"
 
 	"github.com/VictoriaMetrics/metricsql"
 	"github.com/chengchung/ServerStatus/datasource/prometheus/client"
@@ -33,6 +34,7 @@ type Property struct {
 
 	global_restrictions []metricsql.LabelFilter
 	overwrites          map[string]proto.NodesOverwrites
+	network_overwrites  proto.NetworkOverwritesConf
 
 	id_label string
 }
@@ -45,14 +47,18 @@ type QueryProcedureContext struct {
 	up_hosts   []string
 	down_hosts []string
 
-	network_matchers map[string][]metricsql.LabelFilter
+	network_matchers          map[string][]metricsql.LabelFilter
+	network_metric_overwrites proto.NetworkOverwritesConf
+	host_billing_settings     map[string]time.Time
 
 	results map[string]map[string]interface{} // host: {property: value}
 }
 
 func NewQueryProcedureContext() *QueryProcedureContext {
 	return &QueryProcedureContext{
-		results: make(map[string]map[string]interface{}),
+		network_matchers:      make(map[string][]metricsql.LabelFilter),
+		host_billing_settings: make(map[string]time.Time),
+		results:               make(map[string]map[string]interface{}),
 	}
 }
 

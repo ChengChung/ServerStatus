@@ -248,12 +248,27 @@ func (c *QueryClient) get_host_network_total(rawctx interface{}, base_query stri
 
 	now := time.Now()
 
+	align_to := time.Duration(0)
+	if ctx.network_metric_overwrites.Enable && len(ctx.network_metric_overwrites.RangeAlign) > 0 {
+		duration, err := time.ParseDuration(ctx.network_metric_overwrites.RangeAlign)
+		if err != nil {
+			logrus.Errorf("invalid range align %s", ctx.network_metric_overwrites.RangeAlign)
+		} else {
+			align_to = duration
+		}
+	}
+
 	queries := make([]string, 0)
 	for _, host := range ctx.up_hosts {
 		//	should not raise error
 		raw_metric_expr, _ := metricsql.Parse(base_query)
 
-		rollup_range := duration_to_str(time_since(get_last_date_of_time(time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())), time.Duration(0)))
+		ref := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+		if date, ok := ctx.host_billing_settings[host]; ok {
+			ref = time.Date(now.Year(), now.Month(), date.Day(), date.Hour(), date.Minute(), date.Second(), date.Nanosecond(), date.Location())
+		}
+
+		rollup_range := duration_to_str(time_since(get_last_date_of_time(ref), align_to))
 
 		var opt helper.AlterOption
 		opt.RollupOpt = &helper.RollupOption{Window: rollup_range}
@@ -291,9 +306,21 @@ func (c *QueryClient) get_host_network_total(rawctx interface{}, base_query stri
 }
 
 func (c *QueryClient) get_host_network_rx_total(rawctx interface{}) (interface{}, error) {
-	return c.get_host_network_total(rawctx, default_network_rx_source_metric)
+	ctx := rawctx.(*QueryProcedureContext)
+
+	m := default_network_rx_source_metric
+	if ctx.network_metric_overwrites.Enable && len(ctx.network_metric_overwrites.RxMetric) > 0 {
+		m = ctx.network_metric_overwrites.RxMetric
+	}
+	return c.get_host_network_total(rawctx, m)
 }
 
 func (c *QueryClient) get_host_network_tx_total(rawctx interface{}) (interface{}, error) {
-	return c.get_host_network_total(rawctx, default_network_tx_source_metric)
+	ctx := rawctx.(*QueryProcedureContext)
+
+	m := default_network_tx_source_metric
+	if ctx.network_metric_overwrites.Enable && len(ctx.network_metric_overwrites.TxMetric) > 0 {
+		m = ctx.network_metric_overwrites.TxMetric
+	}
+	return c.get_host_network_total(rawctx, m)
 }

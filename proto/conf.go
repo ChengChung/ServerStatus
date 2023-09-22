@@ -1,6 +1,8 @@
 package proto
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 type MetricMatcher struct {
 	Label string `json:"label"`
@@ -11,6 +13,7 @@ type MetricMatcher struct {
 type NodesOverwrites struct {
 	DisplayName    string   `json:"hostname"`
 	NetworkDevices []string `json:"net_devices"`
+	BillingDate    string   `json:"billing_date"`
 }
 
 type NodeConf struct {
@@ -18,11 +21,20 @@ type NodeConf struct {
 	Overwrites NodesOverwrites `json:"overwrites"`
 }
 
+type NetworkOverwritesConf struct {
+	Enable     bool   `json:"enable"`
+	RxMetric   string `json:"rx"`
+	TxMetric   string `json:"tx"`
+	RangeAlign string `json:"align"`
+}
+
 type NodesConf struct {
 	DefaultDataSource string     `json:"default_data_source"`
 	IdentityLabelName string     `json:"id_label"`
 	Mode              string     `json:"mode"`
 	Nodes             []NodeConf `json:"list"`
+
+	NetworkOverwrites NetworkOverwritesConf `json:"network_overwrites"`
 
 	GlobalMetricMatchers []MetricMatcher `json:"global_matcher"`
 }

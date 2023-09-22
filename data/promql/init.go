@@ -7,10 +7,10 @@ import (
 )
 
 var op_mapping map[string]metricsql.LabelFilter = map[string]metricsql.LabelFilter{
-	"=":  metricsql.LabelFilter{IsNegative: false, IsRegexp: false},
-	"!=": metricsql.LabelFilter{IsNegative: true, IsRegexp: false},
-	"=~": metricsql.LabelFilter{IsNegative: false, IsRegexp: true},
-	"!~": metricsql.LabelFilter{IsNegative: true, IsRegexp: true},
+	"=":  {IsNegative: false, IsRegexp: false},
+	"!=": {IsNegative: true, IsRegexp: false},
+	"=~": {IsNegative: false, IsRegexp: true},
+	"!~": {IsNegative: true, IsRegexp: true},
 }
 
 func load_config(cfg proto.NodesConf) *Property {
@@ -52,5 +52,6 @@ func load_config(cfg proto.NodesConf) *Property {
 		enable_dynamic_import: enable_dynamic_import,
 		global_restrictions:   global_restrictions,
 		overwrites:            hosts_overwrites,
+		network_overwrites:    cfg.NetworkOverwrites,
 	}
 }

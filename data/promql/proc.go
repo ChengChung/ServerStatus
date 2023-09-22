@@ -82,16 +82,27 @@ func (c *QueryClient) prepare_host_ctx(rawctx interface{}) {
 	ctx := rawctx.(*QueryProcedureContext)
 
 	network_matchers := make(map[string][]metricsql.LabelFilter)
+	host_billing_settings := make(map[string]time.Time)
 	for host, value := range c.current_prop.overwrites {
 		if len(value.NetworkDevices) == 0 {
 			continue
 		}
-		network_matchers[host] = []metricsql.LabelFilter{metricsql.LabelFilter{
+		network_matchers[host] = []metricsql.LabelFilter{{
 			Label:    default_network_device_label,
 			Value:    utils.RegQuoteOr(value.NetworkDevices),
 			IsRegexp: true,
 		}}
+
+		t, err := time.Parse(time.RFC3339, value.BillingDate)
+		if err != nil {
+			logrus.Errorf("invalid billing date %s for host %s", value.BillingDate, host)
+		} else {
+			host_billing_settings[host] = t
+		}
 	}
+
+	ctx.network_metric_overwrites = c.current_prop.network_overwrites
+	ctx.host_billing_settings = host_billing_settings
 
 	ctx.network_matchers = network_matchers
 }
