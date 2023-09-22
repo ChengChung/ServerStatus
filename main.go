@@ -44,11 +44,15 @@ func reload(ctx iris.Context) {
 	ctx.StatusCode(200)
 }
 
-func init_logger(path string) {
+func init_logger(path string, level string) {
 	logfmt := &logger.CustomFormatter{
 		EnableGoRoutineId: true,
 	}
-	logrus.SetLevel(logrus.DebugLevel)
+	lv, err := logrus.ParseLevel(level)
+	if err != nil {
+		lv = logrus.DebugLevel
+	}
+	logrus.SetLevel(lv)
 	logrus.SetReportCaller(true)
 	logrus.SetFormatter(logfmt)
 	if len(path) == 0 {
@@ -136,7 +140,7 @@ func init_main() bool {
 
 	listen_addr = cfg.Listen
 
-	init_logger(cfg.LogPath)
+	init_logger(cfg.LogPath, cfg.LogLevel)
 	init_iris(cfg.LogPath)
 
 	if cfg.RefreshInterval > 0 {

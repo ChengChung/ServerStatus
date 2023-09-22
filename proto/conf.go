@@ -43,6 +43,7 @@ type MainConf struct {
 	RefreshInterval uint64            `json:"refresh_interval"`
 	ScrapeInterval  uint64            `json:"scrape_interval"`
 	LogPath         string            `json:"log_path"`
+	LogLevel        string            `json:"log_level"`
 	Nodes           json.RawMessage   `json:"nodes"`
 	DataSources     []json.RawMessage `json:"data_sources"`
 }
