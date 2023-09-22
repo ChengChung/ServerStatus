@@ -1,0 +1,8 @@
+groups:
+- name: netwokr_rules
+  interval: 30m
+  rules:
+  - record: node_network_transmit_bytes_total:30m_inc
+    expr: increase(node_network_transmit_bytes_total[30m])
+  - record: node_network_receive_bytes_total:30m_inc
+    expr: increase(node_network_receive_bytes_total[30m])
