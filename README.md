@@ -58,6 +58,12 @@ and those scraped from node-exporter, it will be
         "default_data_source": "prometheus_name",
         "id_label": "hostname",	# label name used to identify a host
         "mode": "AUTO",		# AUTO or STATIC, AUTO means hosts will be get from query, and STATIC means the following list will be the source  
+        "network_overwrites": {     # for aggerated metrics to calculate the total amount of network traffic
+            "enable": true,
+            "rx": "node_network_receive_bytes_total:30m_inc",
+            "tx": "node_network_transmit_bytes_total:30m_inc",
+            "align": "30m"
+        },
         "list": [
             {
                 "hostname": "host-a",
@@ -78,7 +84,8 @@ and those scraped from node-exporter, it will be
                         "eth4",
                         "pppoe0",
                         "pppoe1"
-                    ]
+                    ],
+                    "billing_date": "2023-09-15T00:00:00+08:00" # network traffic will reset at the day and hour of the month
                 }
             }
         ],
@@ -102,5 +109,14 @@ and those scraped from node-exporter, it will be
 
 If you don't add `hostname` in prometheus configuration, you can specific `id_label` as `instance` here, and fill `hostname` as `1.1.1.1:9100` or `2.2.2.2:9100` in list, and with a replaced `hostname` value in `overwrites` section.
 
+### pre-aggregated network metrics
+At the end of the month or billing cycle, calculating the total network traffic usage can become a time-consuming task
+
+To mitigate this, you can utilize record rules from `VMAlert` or `Prometheus` to aggregate network traffic metrics. For instance, by applying a rule to aggregate the increase in traffic over a 30-minute range, the number of data points will be reduced to 1/120th compared to the original data if your scrape duration is 15 seconds
+
+You can enable this feature in the `network_overwrites` section
+
+Please refer to `./doc/vm/vmalert_rule.yml` for instructions on how to add record rules
+
 ### systemd and reverse proxy config
-please refer to `./doc/` for detail
+Please refer to `./doc/` for detail

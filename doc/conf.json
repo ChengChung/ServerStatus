@@ -4,10 +4,17 @@
     "refresh_interval": 120,
     "scrape_interval": 5,
     "log_path": "/path/to/logdir",
+    "log_level": "debug",
     "nodes": {
         "default_data_source": "prometheus_name",
         "id_label": "hostname",
         "mode": "AUTO",
+        "network_overwrites": {
+            "enable": true,
+            "rx": "node_network_receive_bytes_total:30m_inc",
+            "tx": "node_network_transmit_bytes_total:30m_inc",
+            "align": "30m"
+        },
         "list": [
             {
                 "hostname": "host-a",
@@ -28,7 +35,8 @@
                         "eth4",
                         "pppoe0",
                         "pppoe1"
-                    ]
+                    ],
+                    "billing_date": "2023-09-15T00:00:00+08:00"
                 }
             }
         ],
